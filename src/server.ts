@@ -28,11 +28,11 @@ dotenv.config();
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 
-// // API info page
-// app.get("/", (req, res) => {
-//   const pathToFile = filePath("../public/index.html");
-//   res.sendFile(pathToFile);
-// });
+// API info page
+app.get("/", (req, res) => {
+  const pathToFile = filePath("../public/index.html");
+  res.sendFile(pathToFile);
+});
 
 // GET /tasks
 app.get("/tasks", (req, res) => {
