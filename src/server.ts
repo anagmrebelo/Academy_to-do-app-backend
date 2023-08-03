@@ -40,14 +40,14 @@ app.get("/tasks", (req, res) => {
   res.status(200).json(allSignatures);
 });
 
-// // POST /tasks
-// app.post<{}, {}, DbTask>("/tasks", (req, res) => {
-//   // to be rigorous, ought to handle non-conforming request bodies
-//   // ... but omitting this as a simplification
-//   const postData = req.body;
-//   const createdSignature = addDbTask(postData);
-//   res.status(201).json(createdSignature);
-// });
+// POST /tasks
+app.post<{}, {}, DbTask>("/tasks", (req, res) => {
+  // to be rigorous, ought to handle non-conforming request bodies
+  // ... but omitting this as a simplification
+  const postData = req.body;
+  const createdSignature = addDbTask(postData);
+  res.status(201).json(createdSignature);
+});
 
 // GET /tasks/:id
 app.get<{ id: string }>("/tasks/:id", (req, res) => {
