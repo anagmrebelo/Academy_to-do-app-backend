@@ -69,15 +69,15 @@ app.get<{ id: string }>("/tasks/:id", (req, res) => {
 //   }
 // });
 
-// // PATCH /tasks/:id
-// app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
-//   const matchingSignature = updateDbTaskById(parseInt(req.params.id), req.body);
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     res.status(200).json(matchingSignature);
-//   }
-// });
+// PATCH /tasks/:id
+app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
+  const matchingSignature = updateDbTaskById(parseInt(req.params.id), req.body);
+  if (matchingSignature === "not found") {
+    res.status(404).json(matchingSignature);
+  } else {
+    res.status(200).json(matchingSignature);
+  }
+});
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
