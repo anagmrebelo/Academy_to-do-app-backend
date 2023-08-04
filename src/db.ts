@@ -87,7 +87,8 @@ const findIndexOfDbTaskById = (id: number): number | "not found" => {
  * @returns all database tasks from the database
  */
 export const getAllDbTasks = (): DbTaskWithId[] => {
-  return db;
+  const db_reverse = [...db].reverse();
+  return db_reverse;
 };
 
 /**
