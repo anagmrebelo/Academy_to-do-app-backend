@@ -8,6 +8,7 @@ import {
   getDbTaskById,
   DbTask,
   updateDbTaskById,
+  getIncompleteDbTasks,
 } from "./db";
 import filePath from "./filePath";
 
@@ -47,6 +48,12 @@ app.post<{}, {}, DbTask>("/tasks", (req, res) => {
   const postData = req.body;
   const createdSignature = addDbTask(postData);
   res.status(201).json(createdSignature);
+});
+
+// GET /tasks/incomplete
+app.get("/tasks/incomplete", (req, res) => {
+  const incompleteSignatures = getIncompleteDbTasks();
+  res.status(200).json(incompleteSignatures);
 });
 
 // GET /tasks/:id
