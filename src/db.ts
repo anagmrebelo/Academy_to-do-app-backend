@@ -92,6 +92,17 @@ export const getAllDbTasks = (): DbTaskWithId[] => {
 };
 
 /**
+ * Find all database tasks that are incomplete
+ * @returns all database tasks from the database
+ */
+export const getIncompleteDbTasks = (): DbTaskWithId[] => {
+  const db_reverse_filtered = [...db]
+    .filter((oneTask) => !oneTask.status)
+    .reverse();
+  return db_reverse_filtered;
+};
+
+/**
  * Locates a database task by a given id
  *
  * @param id - the id of the database task to locate
