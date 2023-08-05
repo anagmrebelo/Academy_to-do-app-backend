@@ -17,15 +17,17 @@ import filePath from "./filePath";
 // (comment out if desired, or change the number)
 addDummyDbTasks(5);
 
-// interface Option {
-//   sort: boolean,
-//   filter: boolean
-// }
+interface Option {
+  sort: boolean;
+  filter: boolean;
+}
 
-// const options = {
-//   sort: false,
-//   true: false,
-// };
+type OptionUnion = "filter" | "sort";
+
+const options: Option = {
+  sort: false,
+  filter: false,
+};
 
 const app = express();
 
@@ -48,8 +50,13 @@ app.get("/", (req, res) => {
 
 // GET /tasks
 app.get("/tasks", (req, res) => {
-  const allSignatures = getAllDbTasks();
-  res.status(200).json(allSignatures);
+  let allSignaturesAfterOptions: DbTask[] = [];
+  if (options.filter) {
+    allSignaturesAfterOptions = getIncompleteDbTasks();
+  } else {
+    allSignaturesAfterOptions = getAllDbTasks();
+  }
+  res.status(200).json(allSignaturesAfterOptions);
 });
 
 // POST /tasks
@@ -59,12 +66,6 @@ app.post<{}, {}, DbTask>("/tasks", (req, res) => {
   const postData = req.body;
   const createdSignature = addDbTask(postData);
   res.status(201).json(createdSignature);
-});
-
-// GET /tasks/incomplete
-app.get("/tasks/incomplete", (req, res) => {
-  const incompleteSignatures = getIncompleteDbTasks();
-  res.status(200).json(incompleteSignatures);
 });
 
 // GET /tasks/:id
@@ -88,6 +89,12 @@ app.delete<{ id: string }>("/tasks/:id", (req, res) => {
   }
 });
 
+app.patch<{}, {}, { type: OptionUnion }>("/tasks/options", (req, res) => {
+  const optionType = req.body.type;
+  options[optionType] = !options[optionType];
+  res.status(200).json({ optionType: options[optionType] });
+});
+
 // PATCH /tasks/:id
 app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
   const matchingSignature = updateDbTaskById(parseInt(req.params.id), req.body);
@@ -97,12 +104,6 @@ app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
     res.status(200).json(matchingSignature);
   }
 });
-
-// app.patch<{}, {}, Partial>("/tasks/options", (req, res) => {
-//   const options = req.body
-//   if (req.body)
-
-// );
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
