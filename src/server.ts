@@ -9,12 +9,23 @@ import {
   DbTask,
   updateDbTaskById,
   getIncompleteDbTasks,
+  deleteDbTaskById,
 } from "./db";
 import filePath from "./filePath";
 
 // loading in some dummy tasks into the database
 // (comment out if desired, or change the number)
 addDummyDbTasks(5);
+
+// interface Option {
+//   sort: boolean,
+//   filter: boolean
+// }
+
+// const options = {
+//   sort: false,
+//   true: false,
+// };
 
 const app = express();
 
@@ -66,15 +77,16 @@ app.get<{ id: string }>("/tasks/:id", (req, res) => {
   }
 });
 
-// // DELETE /tasks/:id
-// app.delete<{ id: string }>("/tasks/:id", (req, res) => {
-//   const matchingSignature = getDbTaskById(parseInt(req.params.id));
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     res.status(200).json(matchingSignature);
-//   }
-// });
+// DELETE /tasks/:id
+app.delete<{ id: string }>("/tasks/:id", (req, res) => {
+  const matchingSignature = getDbTaskById(parseInt(req.params.id));
+  if (matchingSignature === "not found") {
+    res.status(404).json(matchingSignature);
+  } else {
+    deleteDbTaskById(parseInt(req.params.id));
+    res.status(200).json(matchingSignature);
+  }
+});
 
 // PATCH /tasks/:id
 app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
@@ -85,6 +97,12 @@ app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
     res.status(200).json(matchingSignature);
   }
 });
+
+// app.patch<{}, {}, Partial>("/tasks/options", (req, res) => {
+//   const options = req.body
+//   if (req.body)
+
+// );
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
