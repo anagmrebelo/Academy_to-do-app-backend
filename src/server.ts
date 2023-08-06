@@ -89,7 +89,7 @@ app.delete<{ id: string }>("/tasks/:id", (req, res) => {
   }
 });
 
-app.patch<{}, {}, { type: OptionUnion }>("/tasks/options", (req, res) => {
+app.patch<{}, {}, { type: OptionUnion }>("/options", (req, res) => {
   const optionType = req.body.type;
   options[optionType] = !options[optionType];
   res.status(200).json({ optionType: options[optionType] });
