@@ -65,7 +65,7 @@ const getOptionsFromUser = async (
     textParams.push(false);
   }
   if (sort) {
-    textOptions += " ORDER BY due_date DESC";
+    textOptions += " ORDER BY due_date";
   } else {
     textOptions += " ORDER BY id DESC";
   }
@@ -246,4 +246,17 @@ export const getUserOption = async (
   await client.end();
 
   return res.rows[0][option];
+};
+
+/**
+ * Find all database users
+ * @returns all database users from the database
+ */
+export const getAllDbUsers = async (): Promise<UserWithId[]> => {
+  const client = new Client(config);
+  await client.connect();
+  const text = "SELECT * from users";
+  const res = await client.query(text);
+  await client.end();
+  return res.rows;
 };

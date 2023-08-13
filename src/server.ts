@@ -9,6 +9,7 @@ import {
   updateDbTaskById,
   updateUserById,
   getUserOption,
+  getAllDbUsers,
   DbTask,
   User,
 } from "./db";
@@ -76,6 +77,12 @@ app.patch<{ id: string }, {}, Partial<DbTask>>(
   }
 );
 
+// GET /users
+app.get("/users", async (req, res) => {
+  const allUsers = await getAllDbUsers();
+  res.status(200).json(allUsers);
+});
+
 export type Option = "filter" | "sort";
 
 // PATCH /users/:id
@@ -108,14 +115,3 @@ app.listen(PORT_NUMBER, () => {
 //   doDemo();
 //   res.status(200).json({ status: true });
 // });
-
-// app.patch<{}, {}, { type: OptionUnion }>("/options", (req, res) => {
-//   const optionType = req.body.type;
-//   options[optionType] = !options[optionType];
-//   res.status(200).json({ optionType: options[optionType] });
-// });
-
-// const options: Option = {
-//   sort: false,
-//   filter: false,
-// };
