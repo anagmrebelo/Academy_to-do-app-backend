@@ -22,16 +22,53 @@ export interface DbTaskWithId extends DbTask {
   id: number;
 }
 
+export interface User {
+  name: string;
+  sort: boolean;
+  filter: boolean;
+}
+
+export interface UserWithId extends User {
+  id: number;
+}
+
 /**
  * Find all database tasks
  * @returns all database tasks from the database
  */
-export const getAllDbTasks = async (): Promise<DbTaskWithId[]> => {
+export const getAllDbTasks = async (user_id = 1): Promise<DbTaskWithId[]> => {
   const client = new Client(config);
   await client.connect();
-  const res = await client.query("SELECT * from tasks");
+
+  const options = await getOptionsFromUser(user_id, client);
+  const text = "SELECT * from tasks" + " WHERE user_id=$1" + options.text;
+  const values = [user_id, ...options.params];
+  const res = await client.query(text, values);
+
   await client.end();
-  return res.rows.sort((a: DbTaskWithId, b: DbTaskWithId) => b.id - a.id);
+  return res.rows;
+};
+
+const getOptionsFromUser = async (
+  user_id: number,
+  client: Client
+): Promise<{ text: string; params: boolean[] }> => {
+  let textOptions = "";
+  const textParams: boolean[] = [];
+  const text = "SELECT sort, filter from users WHERE id=$1";
+  const values = [user_id];
+  const res = await client.query(text, values);
+  const { sort, filter } = res.rows[0];
+  if (filter) {
+    textOptions += " AND status=$2";
+    textParams.push(false);
+  }
+  if (sort) {
+    textOptions += " ORDER BY due_date DESC";
+  } else {
+    textOptions += " ORDER BY id DESC";
+  }
+  return { text: textOptions, params: textParams };
 };
 
 /**
@@ -151,13 +188,46 @@ const convertObjIntoStr = (
   return { setText: retStr, params: params };
 };
 
-// /**
-//  * Find all database tasks that are incomplete
-//  * @returns all database tasks from the database
-//  */
-// export const getIncompleteDbTasks = (): DbTaskWithId[] => {
-//   const db_reverse_filtered = [...db]
-//     .filter((oneTask) => !oneTask.status)
-//     .reverse();
-//   return db_reverse_filtered;
-// };
+export const updateUserById = async (
+  id: number,
+  newData: Partial<User>
+): Promise<UserWithId | "not found"> => {
+  const matchingUser = await getDbUserById(id);
+  if (matchingUser === "not found") {
+    return matchingUser;
+  }
+  const client = new Client(config);
+  await client.connect();
+  const setTextAndParams = convertObjIntoStr(newData);
+  const text = `UPDATE users ${setTextAndParams.setText} RETURNING id, name, sort, filter`;
+  const values = [...setTextAndParams.params, id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  return res.rows[0];
+};
+
+/**
+ * Locates a database user by a given id
+ *
+ * @param id - the id of the database user to locate
+ * @returns the located database user (if found),
+ *  otherwise the string `"not found"`
+ */
+export const getDbUserById = async (
+  id: number
+): Promise<UserWithId | "not found"> => {
+  const client = new Client(config);
+
+  await client.connect();
+  const text = "SELECT * FROM users WHERE id=$1";
+  const values = [id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  if (res.rowCount) {
+    return res.rows[0];
+  } else {
+    return "not found";
+  }
+};

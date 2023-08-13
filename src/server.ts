@@ -7,7 +7,9 @@ import {
   addDbTask,
   deleteDbTaskById,
   updateDbTaskById,
+  updateUserById,
   DbTask,
+  User,
 } from "./db";
 
 const app = express();
@@ -72,6 +74,16 @@ app.patch<{ id: string }, {}, Partial<DbTask>>(
     }
   }
 );
+
+// PATCH /users/:id
+app.patch<{ id: string }, {}, Partial<User>>("/users/:id", async (req, res) => {
+  const matchingUser = await updateUserById(parseInt(req.params.id), req.body);
+  if (matchingUser === "not found") {
+    res.status(404).json(matchingUser);
+  } else {
+    res.status(200).json(matchingUser);
+  }
+});
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
