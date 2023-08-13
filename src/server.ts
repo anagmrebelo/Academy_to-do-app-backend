@@ -1,7 +1,14 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { getAllDbTasks, addDbTask, DbTaskWithId, DbTask } from "./db";
+import {
+  getAllDbTasks,
+  getDbTaskById,
+  addDbTask,
+  deleteDbTaskById,
+  DbTaskWithId,
+  DbTask,
+} from "./db";
 
 const app = express();
 
@@ -17,38 +24,38 @@ dotenv.config();
 const PORT_NUMBER = process.env.PORT ?? 4000;
 
 // GET /tasks
-app.get("/tasks", (req, res) => {
-  getAllDbTasks().then((response: DbTaskWithId[]) =>
-    res.status(200).json(response)
-  );
+app.get("/tasks", async (req, res) => {
+  const allTasks = await getAllDbTasks();
+  res.status(200).json(allTasks);
 });
 
 // POST /tasks
-app.post<{}, {}, DbTask>("/tasks", (req, res) => {
+app.post<{}, {}, DbTask>("/tasks", async (req, res) => {
   const postData: DbTask = req.body;
-  addDbTask(postData).then((createdTask) => res.status(201).json(createdTask));
+  const createdTask = await addDbTask(postData);
+  res.status(201).json(createdTask);
 });
 
-// // DELETE /tasks/:id
-// app.delete<{ id: string }>("/tasks/:id", (req, res) => {
-//   const matchingSignature = getDbTaskById(parseInt(req.params.id));
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     deleteDbTaskById(parseInt(req.params.id));
-//     res.status(200).json(matchingSignature);
-//   }
-// });
+// GET /tasks/:id
+app.get<{ id: string }>("/tasks/:id", async (req, res) => {
+  const matchingTask = await getDbTaskById(parseInt(req.params.id));
+  if (matchingTask === "not found") {
+    res.status(404).json(matchingTask);
+  } else {
+    res.status(200).json(matchingTask);
+  }
+});
 
-// // GET /tasks/:id
-// app.get<{ id: string }>("/tasks/:id", (req, res) => {
-//   const matchingSignature = getDbTaskById(parseInt(req.params.id));
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     res.status(200).json(matchingSignature);
-//   }
-// });
+// DELETE /tasks/:id
+app.delete<{ id: string }>("/tasks/:id", async (req, res) => {
+  const matchingTask = await getDbTaskById(parseInt(req.params.id));
+  if (matchingTask === "not found") {
+    res.status(404).json(matchingTask);
+  } else {
+    deleteDbTaskById(parseInt(req.params.id));
+    res.status(200).json(matchingTask);
+  }
+});
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);

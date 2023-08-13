@@ -46,7 +46,7 @@ export const addDbTask = async (data: DbTask) => {
 
   await client.connect();
   const text =
-    "INSERT INTO tasks (user_id, value, due_date, status) VALUES($1, $2, $3, $4) RETURNING user_id, value, due_date, status";
+    "INSERT INTO tasks (user_id, value, due_date, status) VALUES($1, $2, $3, $4) RETURNING id, user_id, value, due_date, status";
   const values = [user_id, value, due_date, status];
   const res = await client.query(text, values);
   await client.end();
@@ -54,23 +54,56 @@ export const addDbTask = async (data: DbTask) => {
   return res.rows[0];
 };
 
-// /**
-//  * Deletes a database task with the given id
-//  *
-//  * @param id - the id of the database task to delete
-//  * @returns the deleted database task (if originally located),
-//  *  otherwise the string `"not found"`
-//  */
-// export const deleteDbTaskById = (id: number): DbTaskWithId | "not found" => {
-//   const idxToDeleteAt = findIndexOfDbTaskById(id);
-//   if (typeof idxToDeleteAt === "number") {
-//     const taskToDelete = getDbTaskById(id);
-//     db.splice(idxToDeleteAt, 1); // .splice can delete from an array
-//     return taskToDelete;
-//   } else {
-//     return "not found";
-//   }
-// };
+/**
+ * Locates a database task by a given id
+ *
+ * @param id - the id of the database task to locate
+ * @returns the located database task (if found),
+ *  otherwise the string `"not found"`
+ */
+export const getDbTaskById = async (
+  id: number
+): Promise<DbTaskWithId | "not found"> => {
+  const client = new Client(config);
+
+  await client.connect();
+  const text =
+    "SELECT id, user_id, value, due_date, status FROM tasks WHERE id=$1";
+  const values = [id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  if (res.rowCount) {
+    return res.rows[0];
+  } else {
+    return "not found";
+  }
+};
+
+/**
+ * Deletes a database task with the given id
+ *
+ * @param id - the id of the database task to delete
+ * @returns the deleted database task (if originally located),
+ *  otherwise the string `"not found"`
+ */
+export const deleteDbTaskById = async (
+  id: number
+): Promise<DbTaskWithId | "not found"> => {
+  const matchingTask = await getDbTaskById(id);
+  if (matchingTask === "not found") {
+    return matchingTask;
+  }
+  const client = new Client(config);
+  await client.connect();
+  const text =
+    "DELETE FROM tasks WHERE id=$1 RETURNING id, user_id, value, due_date, status";
+  const values = [id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  return res.rows[0];
+};
 
 // /**
 //  * Finds the index of a database task with a given id
