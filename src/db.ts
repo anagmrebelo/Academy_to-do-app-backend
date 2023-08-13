@@ -65,7 +65,7 @@ const getOptionsFromUser = async (
     textParams.push(false);
   }
   if (sort) {
-    textOptions += " ORDER BY due_date DESC";
+    textOptions += " ORDER BY due_date";
   } else {
     textOptions += " ORDER BY id DESC";
   }
