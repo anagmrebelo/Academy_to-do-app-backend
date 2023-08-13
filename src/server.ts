@@ -9,6 +9,7 @@ import {
   updateDbTaskById,
   updateUserById,
   getUserOption,
+  getAllDbUsers,
   DbTask,
   User,
 } from "./db";
@@ -75,6 +76,12 @@ app.patch<{ id: string }, {}, Partial<DbTask>>(
     }
   }
 );
+
+// GET /users
+app.get("/users", async (req, res) => {
+  const allUsers = await getAllDbUsers();
+  res.status(200).json(allUsers);
+});
 
 export type Option = "filter" | "sort";
 
