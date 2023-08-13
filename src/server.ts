@@ -7,7 +7,6 @@ import {
   addDbTask,
   deleteDbTaskById,
   updateDbTaskById,
-  DbTaskWithId,
   DbTask,
 } from "./db";
 
