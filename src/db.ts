@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import dotenv from "dotenv";
+import { Option } from "./server";
 
 dotenv.config(); //read any .env file(s)
 
@@ -230,4 +231,19 @@ export const getDbUserById = async (
   } else {
     return "not found";
   }
+};
+
+export const getUserOption = async (
+  option: Option,
+  id: number
+): Promise<boolean> => {
+  const client = new Client(config);
+
+  await client.connect();
+  const text = "SELECT * FROM users WHERE id=$1";
+  const values = [id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  return res.rows[0][option];
 };

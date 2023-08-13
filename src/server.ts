@@ -8,6 +8,7 @@ import {
   deleteDbTaskById,
   updateDbTaskById,
   updateUserById,
+  getUserOption,
   DbTask,
   User,
 } from "./db";
@@ -75,15 +76,27 @@ app.patch<{ id: string }, {}, Partial<DbTask>>(
   }
 );
 
+export type Option = "filter" | "sort";
+
 // PATCH /users/:id
-app.patch<{ id: string }, {}, Partial<User>>("/users/:id", async (req, res) => {
-  const matchingUser = await updateUserById(parseInt(req.params.id), req.body);
-  if (matchingUser === "not found") {
-    res.status(404).json(matchingUser);
-  } else {
-    res.status(200).json(matchingUser);
+app.patch<{ id: string }, {}, { option: Option }>(
+  "/users/:id",
+  async (req, res) => {
+    const { option } = req.body;
+    const optionValue = await getUserOption(option, parseInt(req.params.id));
+    const optionObj: Partial<User> = {};
+    optionObj[option] = !optionValue;
+    const matchingUser = await updateUserById(
+      parseInt(req.params.id),
+      optionObj
+    );
+    if (matchingUser === "not found") {
+      res.status(404).json(matchingUser);
+    } else {
+      res.status(200).json(matchingUser);
+    }
   }
-});
+);
 
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
@@ -101,13 +114,6 @@ app.listen(PORT_NUMBER, () => {
 //   options[optionType] = !options[optionType];
 //   res.status(200).json({ optionType: options[optionType] });
 // });
-
-// interface Option {
-//   sort: boolean;
-//   filter: boolean;
-// }
-
-// type OptionUnion = "filter" | "sort";
 
 // const options: Option = {
 //   sort: false,
