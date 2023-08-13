@@ -105,22 +105,51 @@ export const deleteDbTaskById = async (
   return res.rows[0];
 };
 
-// /**
-//  * Finds the index of a database task with a given id
-//  *
-//  * @param id - the id of the database task to locate the index of
-//  * @returns the index of the matching database task,
-//  *  otherwise the string `"not found"`
-//  */
-// const findIndexOfDbTaskById = (id: number): number | "not found" => {
-//   const matchingIdx = db.findIndex((entry) => entry.id === id);
-//   // .findIndex returns -1 if not located
-//   if (matchingIdx !== -1) {
-//     return matchingIdx;
-//   } else {
-//     return "not found";
-//   }
-// };
+/**
+ * Applies a partial update to a database task for a given id
+ *  based on the passed data
+ *
+ * @param id - the id of the database task to update
+ * @param newData - the new data to overwrite
+ * @returns the updated database task (if one is located),
+ *  otherwise the string `"not found"`
+ */
+export const updateDbTaskById = async (
+  id: number,
+  newData: Partial<DbTask>
+): Promise<DbTaskWithId | "not found"> => {
+  const matchingTask = await getDbTaskById(id);
+  if (matchingTask === "not found") {
+    return matchingTask;
+  }
+  const client = new Client(config);
+  await client.connect();
+  const setTextAndParams = convertObjIntoStr(newData);
+  const text = `UPDATE tasks ${setTextAndParams.setText} RETURNING id, user_id, value, due_date, status`;
+  const values = [...setTextAndParams.params, id];
+  const res = await client.query(text, values);
+  await client.end();
+
+  return res.rows[0];
+};
+
+const convertObjIntoStr = (
+  newData: any
+): { setText: string; params: (string | boolean | number)[] } => {
+  let retStr = "SET ";
+  const params = [];
+  let paramCounter = 1;
+  for (const key in newData) {
+    if (paramCounter != 1) {
+      retStr += ",";
+    }
+    retStr += `${key}=$${paramCounter}`;
+    params.push(newData[key]);
+    paramCounter++;
+  }
+  retStr += `WHERE id=$${paramCounter}`;
+  return { setText: retStr, params: params };
+};
 
 // /**
 //  * Find all database tasks that are incomplete
@@ -131,42 +160,4 @@ export const deleteDbTaskById = async (
 //     .filter((oneTask) => !oneTask.status)
 //     .reverse();
 //   return db_reverse_filtered;
-// };
-
-// /**
-//  * Locates a database task by a given id
-//  *
-//  * @param id - the id of the database task to locate
-//  * @returns the located database task (if found),
-//  *  otherwise the string `"not found"`
-//  */
-// export const getDbTaskById = (id: number): DbTaskWithId | "not found" => {
-//   const maybeEntry = db.find((entry) => entry.id === id);
-//   if (maybeEntry) {
-//     return maybeEntry;
-//   } else {
-//     return "not found";
-//   }
-// };
-
-// /**
-//  * Applies a partial update to a database task for a given id
-//  *  based on the passed data
-//  *
-//  * @param id - the id of the database task to update
-//  * @param newData - the new data to overwrite
-//  * @returns the updated database task (if one is located),
-//  *  otherwise the string `"not found"`
-//  */
-// export const updateDbTaskById = (
-//   id: number,
-//   newData: Partial<DbTask>
-// ): DbTaskWithId | "not found" => {
-//   const idxOfEntry = findIndexOfDbTaskById(id);
-//   // type guard against "not found"
-//   if (typeof idxOfEntry === "number") {
-//     return Object.assign(db[idxOfEntry], newData);
-//   } else {
-//     return "not found";
-//   }
 // };

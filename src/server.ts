@@ -6,6 +6,7 @@ import {
   getDbTaskById,
   addDbTask,
   deleteDbTaskById,
+  updateDbTaskById,
   DbTaskWithId,
   DbTask,
 } from "./db";
@@ -57,20 +58,25 @@ app.delete<{ id: string }>("/tasks/:id", async (req, res) => {
   }
 });
 
+// PATCH /tasks/:id
+app.patch<{ id: string }, {}, Partial<DbTask>>(
+  "/tasks/:id",
+  async (req, res) => {
+    const matchingTask = await updateDbTaskById(
+      parseInt(req.params.id),
+      req.body
+    );
+    if (matchingTask === "not found") {
+      res.status(404).json(matchingTask);
+    } else {
+      res.status(200).json(matchingTask);
+    }
+  }
+);
+
 app.listen(PORT_NUMBER, () => {
   console.log(`Server is listening on port ${PORT_NUMBER}!`);
 });
-
-// // GET /tasks
-// app.get("/tasks", (req, res) => {
-//   let allSignaturesAfterOptions: DbTask[] = [];
-//   if (options.filter) {
-//     allSignaturesAfterOptions = getIncompleteDbTasks();
-//   } else {
-//     allSignaturesAfterOptions = getAllDbTasks();
-//   }
-//   res.status(200).json(allSignaturesAfterOptions);
-// });
 
 // // API info page
 // app.get("/", (req, res) => {
@@ -79,41 +85,10 @@ app.listen(PORT_NUMBER, () => {
 //   res.status(200).json({ status: true });
 // });
 
-// // GET /tasks/:id
-// app.get<{ id: string }>("/tasks/:id", (req, res) => {
-//   const matchingSignature = getDbTaskById(parseInt(req.params.id));
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     res.status(200).json(matchingSignature);
-//   }
-// });
-
-// // DELETE /tasks/:id
-// app.delete<{ id: string }>("/tasks/:id", (req, res) => {
-//   const matchingSignature = getDbTaskById(parseInt(req.params.id));
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     deleteDbTaskById(parseInt(req.params.id));
-//     res.status(200).json(matchingSignature);
-//   }
-// });
-
 // app.patch<{}, {}, { type: OptionUnion }>("/options", (req, res) => {
 //   const optionType = req.body.type;
 //   options[optionType] = !options[optionType];
 //   res.status(200).json({ optionType: options[optionType] });
-// });
-
-// // PATCH /tasks/:id
-// app.patch<{ id: string }, {}, Partial<DbTask>>("/tasks/:id", (req, res) => {
-//   const matchingSignature = updateDbTaskById(parseInt(req.params.id), req.body);
-//   if (matchingSignature === "not found") {
-//     res.status(404).json(matchingSignature);
-//   } else {
-//     res.status(200).json(matchingSignature);
-//   }
 // });
 
 // interface Option {
