@@ -31,7 +31,7 @@ export const getAllDbTasks = async (): Promise<DbTaskWithId[]> => {
   await client.connect();
   const res = await client.query("SELECT * from tasks");
   await client.end();
-  return res.rows.reverse();
+  return res.rows.sort((a: DbTaskWithId, b: DbTaskWithId) => b.id - a.id);
 };
 
 /**
