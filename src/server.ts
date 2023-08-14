@@ -40,14 +40,10 @@ app.post<{}, {}, DbTask>("/tasks", async (req, res) => {
   res.status(201).json(createdTask);
 });
 
-// GET /tasks/:id
-app.get<{ id: string }>("/tasks/:id", async (req, res) => {
-  const matchingTask = await getDbTaskById(parseInt(req.params.id));
-  if (matchingTask === "not found") {
-    res.status(404).json(matchingTask);
-  } else {
-    res.status(200).json(matchingTask);
-  }
+// GET /tasks/:user
+app.get<{ userId: string }>("/tasks/:userId", async (req, res) => {
+  const allTasks = await getAllDbTasks(parseInt(req.params.userId));
+  res.status(200).json(allTasks);
 });
 
 // DELETE /tasks/:id
