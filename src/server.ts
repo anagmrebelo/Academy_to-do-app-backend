@@ -52,7 +52,7 @@ app.delete<{ id: string }>("/tasks/:id", async (req, res) => {
   if (matchingTask === "not found") {
     res.status(404).json(matchingTask);
   } else {
-    deleteDbTaskById(parseInt(req.params.id));
+    await deleteDbTaskById(parseInt(req.params.id));
     res.status(200).json(matchingTask);
   }
 });
