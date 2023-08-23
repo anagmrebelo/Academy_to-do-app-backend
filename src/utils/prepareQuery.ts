@@ -1,18 +1,21 @@
+import { DbTask } from "../db/tasks";
+import { User } from "../db/users";
+
 export const calculateTextAndParamsSet = (
-  newData: { [key: string]: string | boolean | number },
+  newData: Partial<DbTask> | Partial<User>,
   id: number
 ): { text: string; params: (string | boolean | number)[] } | undefined => {
   if (!newData) {
     return undefined;
   }
-  const keys = Object.keys(newData);
+  const keys = Object.keys(newData) as (keyof typeof newData)[];
   const setColumns = keys
     .map((key, index) => `${key} = $${index + 1}`)
     .join(", ");
 
   const retStr = `SET ${setColumns} WHERE id=$${keys.length + 1}`;
 
-  const values = keys.map((key) => newData[key]);
+  const values: (string | boolean | number)[] = keys.map((key) => newData[key]);
   values.push(id);
 
   return { text: retStr, params: values };

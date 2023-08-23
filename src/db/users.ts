@@ -85,7 +85,6 @@ export const getUserOption = async (
 export const getOptionsFromUser = async (
   user_id: number
 ): Promise<{ sort: boolean; filter: boolean } | undefined> => {
-  const textParams: boolean[] = [];
   const text = "SELECT sort, filter from users WHERE id=$1";
   const values = [user_id];
 
