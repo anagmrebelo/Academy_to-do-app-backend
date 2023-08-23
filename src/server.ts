@@ -27,11 +27,11 @@ dotenv.config();
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 
-// GET /tasks
-app.get("/tasks", async (req, res) => {
-  const allTasks = await getAllDbTasks();
-  res.status(200).json(allTasks);
-});
+// // GET /tasks
+// app.get("/tasks", async (req, res) => {
+//   const allTasks = await getAllDbTasks();
+//   res.status(200).json(allTasks);
+// });
 
 // POST /tasks
 app.post<{}, {}, DbTask>("/tasks", async (req, res) => {

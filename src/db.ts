@@ -1,6 +1,6 @@
-import { Client } from "pg";
 import dotenv from "dotenv";
 import { Option } from "./server";
+import * as db from "./db/index";
 
 dotenv.config(); //read any .env file(s)
 
@@ -37,28 +37,44 @@ export interface UserWithId extends User {
  * Find all database tasks
  * @returns all database tasks from the database
  */
-export const getAllDbTasks = async (user_id = 1): Promise<DbTaskWithId[]> => {
-  const client = new Client(config);
-  await client.connect();
-
-  const options = await getOptionsFromUser(user_id, client);
+export const getAllDbTasks = async (
+  user_id: number
+): Promise<DbTaskWithId[] | undefined> => {
+  let dbResult;
+  const options = await getOptionsFromUser(user_id);
+  if (!options) {
+    return undefined;
+  }
   const text = "SELECT * from tasks" + " WHERE user_id=$1" + options.text;
   const values = [user_id, ...options.params];
-  const res = await client.query(text, values);
 
-  await client.end();
-  return res.rows;
+  try {
+    dbResult = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  return dbResult?.rows;
 };
 
 const getOptionsFromUser = async (
-  user_id: number,
-  client: Client
-): Promise<{ text: string; params: boolean[] }> => {
+  user_id: number
+): Promise<{ text: string; params: boolean[] } | undefined> => {
   let textOptions = "";
   const textParams: boolean[] = [];
   const text = "SELECT sort, filter from users WHERE id=$1";
   const values = [user_id];
-  const res = await client.query(text, values);
+  let res;
+
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  if (!res) {
+    return undefined;
+  }
   const { sort, filter } = res.rows[0];
   if (filter) {
     textOptions += " AND status=$2";
@@ -78,18 +94,23 @@ const getOptionsFromUser = async (
  * @param data - the task data to insert in
  * @returns the task added (with a newly created id)
  */
-export const addDbTask = async (data: DbTask) => {
-  const client = new Client(config);
+export const addDbTask = async (
+  data: DbTask
+): Promise<DbTaskWithId | undefined> => {
   const { user_id, value, due_date, status } = data;
 
-  await client.connect();
   const text =
     "INSERT INTO tasks (user_id, value, due_date, status) VALUES($1, $2, $3, $4) RETURNING id, user_id, value, due_date, status";
   const values = [user_id, value, due_date, status];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  return res.rows[0];
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  return res?.rows[0];
 };
 
 /**
@@ -101,17 +122,20 @@ export const addDbTask = async (data: DbTask) => {
  */
 export const getDbTaskById = async (
   id: number
-): Promise<DbTaskWithId | "not found"> => {
-  const client = new Client(config);
-
-  await client.connect();
+): Promise<DbTaskWithId | "not found" | undefined> => {
   const text =
     "SELECT id, user_id, value, due_date, status FROM tasks WHERE id=$1";
   const values = [id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  if (res.rowCount) {
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+  if (!res) {
+    return undefined;
+  } else if (res.rowCount) {
     return res.rows[0];
   } else {
     return "not found";
@@ -127,20 +151,23 @@ export const getDbTaskById = async (
  */
 export const deleteDbTaskById = async (
   id: number
-): Promise<DbTaskWithId | "not found"> => {
+): Promise<DbTaskWithId | "not found" | undefined> => {
   const matchingTask = await getDbTaskById(id);
   if (matchingTask === "not found") {
     return matchingTask;
   }
-  const client = new Client(config);
-  await client.connect();
   const text =
     "DELETE FROM tasks WHERE id=$1 RETURNING id, user_id, value, due_date, status";
   const values = [id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  return res.rows[0];
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  return res?.rows[0];
 };
 
 /**
@@ -155,20 +182,24 @@ export const deleteDbTaskById = async (
 export const updateDbTaskById = async (
   id: number,
   newData: Partial<DbTask>
-): Promise<DbTaskWithId | "not found"> => {
+): Promise<DbTaskWithId | "not found" | undefined> => {
   const matchingTask = await getDbTaskById(id);
   if (matchingTask === "not found") {
     return matchingTask;
   }
-  const client = new Client(config);
-  await client.connect();
+
   const setTextAndParams = convertObjIntoStr(newData);
   const text = `UPDATE tasks ${setTextAndParams.setText} RETURNING id, user_id, value, due_date, status`;
   const values = [...setTextAndParams.params, id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  return res.rows[0];
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  return res?.rows[0];
 };
 
 const convertObjIntoStr = (
@@ -192,20 +223,23 @@ const convertObjIntoStr = (
 export const updateUserById = async (
   id: number,
   newData: Partial<User>
-): Promise<UserWithId | "not found"> => {
+): Promise<UserWithId | "not found" | undefined> => {
   const matchingUser = await getDbUserById(id);
   if (matchingUser === "not found") {
     return matchingUser;
   }
-  const client = new Client(config);
-  await client.connect();
+
   const setTextAndParams = convertObjIntoStr(newData);
   const text = `UPDATE users ${setTextAndParams.setText} RETURNING id, name, sort, filter`;
   const values = [...setTextAndParams.params, id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  return res.rows[0];
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+  return res?.rows[0];
 };
 
 /**
@@ -217,16 +251,20 @@ export const updateUserById = async (
  */
 export const getDbUserById = async (
   id: number
-): Promise<UserWithId | "not found"> => {
-  const client = new Client(config);
-
-  await client.connect();
+): Promise<UserWithId | "not found" | undefined> => {
   const text = "SELECT * FROM users WHERE id=$1";
   const values = [id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  if (res.rowCount) {
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  if (!res) {
+    return undefined;
+  } else if (res.rowCount) {
     return res.rows[0];
   } else {
     return "not found";
@@ -237,26 +275,31 @@ export const getUserOption = async (
   option: Option,
   id: number
 ): Promise<boolean> => {
-  const client = new Client(config);
-
-  await client.connect();
   const text = "SELECT * FROM users WHERE id=$1";
   const values = [id];
-  const res = await client.query(text, values);
-  await client.end();
+  let res;
 
-  return res.rows[0][option];
+  try {
+    res = await db.query(text, values);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+
+  return res?.rows[0][option];
 };
 
 /**
  * Find all database users
  * @returns all database users from the database
  */
-export const getAllDbUsers = async (): Promise<UserWithId[]> => {
-  const client = new Client(config);
-  await client.connect();
+export const getAllDbUsers = async (): Promise<UserWithId[] | undefined> => {
+  let res;
   const text = "SELECT * from users";
-  const res = await client.query(text);
-  await client.end();
-  return res.rows;
+
+  try {
+    res = await db.query(text, []);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
+  return res?.rows;
 };
