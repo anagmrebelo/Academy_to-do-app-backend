@@ -1,16 +1,5 @@
-import dotenv from "dotenv";
 import { Option } from "./server";
 import * as db from "./db/index";
-
-dotenv.config(); //read any .env file(s)
-
-if (!process.env.DATABASE_URL) {
-  throw "No DATABASE_URL env var provided.  Did you create an .env file?";
-}
-
-const config = {
-  connectionString: process.env.DATABASE_URL,
-};
 
 export interface DbTask {
   user_id: number;
