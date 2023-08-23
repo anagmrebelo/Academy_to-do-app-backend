@@ -1,27 +1,18 @@
-# Academy Express Starter
+# To Do App - Full stack project
 
-This is set up as a quick starter for a no-persistence RESTful Express API (using just an array for in-server memory).
+App features:
 
-## Getting started
+-   Select user from list
+-   View tasks by user
+-   Edit a task
+-   Delete a task
+-   Add a new task by clicking on + buttom or pressing enter
+-   Complete a task
+-   Filter tasks by complete status
+-   Sort tasks by due date
+-   Persist tasks and user options in database
 
-### Shaping the 'database'
+## Link to frontend code
+[Click me](https://github.com/anagmrebelo/to-do-app-frontend/)
 
-`db.ts` is set up for a generic `DbTask` - you may want to reshape and rename that interface.
-
-### Install dependencies
-
-```
-yarn
-```
-
-### Run server
-
-```
-yarn start
-```
-
-Or, for dev mode (restarts server automatically when relevant files change):
-
-```
-yarn start:dev
-```
+![Screenshot 2023-08-23 at 20 02 40](https://github.com/anagmrebelo/to-do-app-frontend/assets/66007323/9e3b06d8-b5a4-436a-9d00-c6cf5ef0d165)
