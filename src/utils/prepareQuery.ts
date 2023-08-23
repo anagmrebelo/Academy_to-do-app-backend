@@ -1,5 +1,5 @@
 export const calculateTextAndParamsSet = (
-  newData: any,
+  newData: { [key: string]: string | boolean | number },
   id: number
 ): { text: string; params: (string | boolean | number)[] } | undefined => {
   if (!newData) {
