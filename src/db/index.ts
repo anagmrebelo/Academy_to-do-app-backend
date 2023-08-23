@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from "pg";
+import { Client } from "pg";
 import dotenv from "dotenv";
 
 dotenv.config(); //read any .env file(s)
@@ -11,12 +11,24 @@ const config = {
   connectionString: process.env.DATABASE_URL,
 };
 
-const pool = new Pool(config);
+const client = new Client(config);
+
+const connectToDb = async () => {
+  await client.connect();
+};
+
+connectToDb();
 
 export async function query(
   text: string,
   params: (string | number | boolean)[]
 ) {
-  const res = await pool.query(text, params);
+  let res;
+
+  try {
+    res = await client.query(text, params);
+  } catch (err) {
+    console.error((err as Error).stack);
+  }
   return res;
 }

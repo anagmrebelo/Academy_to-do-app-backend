@@ -2,17 +2,14 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import {
-  getAllDbTasks,
+  getDbTasksFromUser,
   getDbTaskById,
   addDbTask,
   deleteDbTaskById,
   updateDbTaskById,
-  updateUserById,
-  getUserOption,
-  getAllDbUsers,
   DbTask,
-  User,
-} from "./db";
+} from "./db/tasks";
+import { updateUserById, getUserOption, getAllDbUsers, User } from "./db/users";
 
 const app = express();
 
@@ -27,33 +24,31 @@ dotenv.config();
 // use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 
-// // GET /tasks
-// app.get("/tasks", async (req, res) => {
-//   const allTasks = await getAllDbTasks();
-//   res.status(200).json(allTasks);
-// });
+// GET /tasks/:user
+app.get<{ userId: string }>("/tasks/:userId", async (req, res) => {
+  const allTasks = await getDbTasksFromUser(parseInt(req.params.userId));
+  allTasks ? res.status(200).json(allTasks) : res.status(404).json("Error");
+});
 
 // POST /tasks
 app.post<{}, {}, DbTask>("/tasks", async (req, res) => {
   const postData: DbTask = req.body;
   const createdTask = await addDbTask(postData);
-  res.status(201).json(createdTask);
-});
-
-// GET /tasks/:user
-app.get<{ userId: string }>("/tasks/:userId", async (req, res) => {
-  const allTasks = await getAllDbTasks(parseInt(req.params.userId));
-  res.status(200).json(allTasks);
+  createdTask
+    ? res.status(201).json(createdTask)
+    : res.status(404).json("Error");
 });
 
 // DELETE /tasks/:id
 app.delete<{ id: string }>("/tasks/:id", async (req, res) => {
   const matchingTask = await getDbTaskById(parseInt(req.params.id));
-  if (matchingTask === "not found") {
-    res.status(404).json(matchingTask);
+  if (!matchingTask) {
+    res.status(404).json("Error");
   } else {
-    await deleteDbTaskById(parseInt(req.params.id));
-    res.status(200).json(matchingTask);
+    const deletedTask = await deleteDbTaskById(parseInt(req.params.id));
+    deletedTask
+      ? res.status(200).json(matchingTask)
+      : res.status(404).json("Error");
   }
 });
 
@@ -65,18 +60,16 @@ app.patch<{ id: string }, {}, Partial<DbTask>>(
       parseInt(req.params.id),
       req.body
     );
-    if (matchingTask === "not found") {
-      res.status(404).json(matchingTask);
-    } else {
-      res.status(200).json(matchingTask);
-    }
+    matchingTask
+      ? res.status(200).json(matchingTask)
+      : res.status(404).json("Error");
   }
 );
 
 // GET /users
 app.get("/users", async (req, res) => {
   const allUsers = await getAllDbUsers();
-  res.status(200).json(allUsers);
+  allUsers ? res.status(200).json(allUsers) : res.status(404).json("Error");
 });
 
 export type Option = "filter" | "sort";
@@ -87,17 +80,20 @@ app.patch<{ id: string }, {}, { option: Option }>(
   async (req, res) => {
     const { option } = req.body;
     const optionValue = await getUserOption(option, parseInt(req.params.id));
+    if (optionValue === undefined) {
+      return undefined;
+    }
+
     const optionObj: Partial<User> = {};
     optionObj[option] = !optionValue;
     const matchingUser = await updateUserById(
       parseInt(req.params.id),
       optionObj
     );
-    if (matchingUser === "not found") {
-      res.status(404).json(matchingUser);
-    } else {
-      res.status(200).json(matchingUser);
-    }
+
+    matchingUser
+      ? res.status(200).json(matchingUser)
+      : res.status(404).json("Error");
   }
 );
 
